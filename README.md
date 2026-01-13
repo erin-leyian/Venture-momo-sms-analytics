@@ -19,7 +19,7 @@ Flow (high level):
 - Frontend dashboard reads JSON and visualizes insights
 
 ## Scrum Board
-(I will add the Scrum board link here once created.)
+https://github.com/users/erin-leyian/projects/1/views/1
 
 ## Planned Project Structure
 .
