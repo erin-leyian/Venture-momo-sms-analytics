@@ -50,7 +50,8 @@ The system uses MySQL database (`momo_sms_analytics`) with the following tables:
 3. Run test queries: `mysql -u root -p momo_sms_analytics < database/test_queries.sql`
 
 ## Planned Project Structure
-.
+
+```
 ├── README.md
 ├── .env.example
 ├── requirements.txt
@@ -72,3 +73,4 @@ The system uses MySQL database (`momo_sms_analytics`) with the following tables:
 ├── api/
 ├── scripts/
 └── tests/
+```
