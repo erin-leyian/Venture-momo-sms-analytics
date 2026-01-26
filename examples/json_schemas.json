@@ -1,0 +1,222 @@
+{
+  "description": "JSON schemas representing database entities for MoMo SMS Analytics",
+  "note": "These examples show how relational database tables are serialized to JSON format for API responses",
+  
+  "users": {
+    "description": "User entity JSON representation",
+    "example": {
+      "user_id": 1,
+      "name": "Jane Smith",
+      "phone": "250791666666",
+      "balance": 2000.00
+    },
+    "sql_mapping": {
+      "user_id": "INT AUTO_INCREMENT PRIMARY KEY",
+      "name": "VARCHAR(100)",
+      "phone": "VARCHAR(20) UNIQUE",
+      "balance": "DECIMAL(15, 2)"
+    }
+  },
+  
+  "transaction_types": {
+    "description": "Transaction type lookup table JSON",
+    "example": {
+      "type_id": 1,
+      "type_name": "Payment"
+    },
+    "sql_mapping": {
+      "type_id": "INT AUTO_INCREMENT PRIMARY KEY",
+      "type_name": "VARCHAR(50) NOT NULL"
+    }
+  },
+  
+  "promotions": {
+    "description": "Promotion entity JSON",
+    "example": {
+      "promo_id": 1,
+      "promo_name": "BivaMoMotima",
+      "discount_rate": 10.00
+    },
+    "sql_mapping": {
+      "promo_id": "INT AUTO_INCREMENT PRIMARY KEY",
+      "promo_name": "VARCHAR(100) NOT NULL",
+      "discount_rate": "DECIMAL(15, 2)"
+    }
+  },
+  
+  "transactions": {
+    "description": "Transaction entity JSON (basic)",
+    "example": {
+      "transaction_id": "76662021700",
+      "sender_id": 1,
+      "receiver_id": 3,
+      "type_id": 2,
+      "amount": 2000.00,
+      "transaction_date": "2024-05-10T16:30:51",
+      "status": "Completed"
+    },
+    "sql_mapping": {
+      "transaction_id": "VARCHAR(50) PRIMARY KEY",
+      "sender_id": "INT FOREIGN KEY -> users(user_id)",
+      "receiver_id": "INT FOREIGN KEY -> users(user_id)",
+      "type_id": "INT FOREIGN KEY -> transaction_types(type_id)",
+      "amount": "DECIMAL(15, 2) NOT NULL",
+      "transaction_date": "DATETIME NOT NULL",
+      "status": "VARCHAR(20)"
+    }
+  },
+  
+  "user_promos": {
+    "description": "User-Promotion junction table JSON",
+    "example": {
+      "user_id": 3,
+      "promo_id": 1,
+      "join_date": "2024-05-10T10:00:00",
+      "status": "Active",
+      "redeemed": false
+    },
+    "sql_mapping": {
+      "user_id": "INT PRIMARY KEY, FOREIGN KEY -> users(user_id)",
+      "promo_id": "INT PRIMARY KEY, FOREIGN KEY -> promotions(promo_id)",
+      "join_date": "DATETIME",
+      "status": "VARCHAR(20)",
+      "redeemed": "BOOLEAN DEFAULT FALSE"
+    }
+  },
+  
+  "system_logs": {
+    "description": "System log entity JSON",
+    "example": {
+      "log_id": 1,
+      "transaction_id": "76662021700",
+      "event_description": "Transaction processed successfully",
+      "timestamp": "2024-05-10T16:30:52"
+    },
+    "sql_mapping": {
+      "log_id": "BIGINT AUTO_INCREMENT PRIMARY KEY",
+      "transaction_id": "VARCHAR(50) FOREIGN KEY -> transactions(transaction_id)",
+      "event_description": "VARCHAR(255)",
+      "timestamp": "DATETIME DEFAULT CURRENT_TIMESTAMP"
+    }
+  },
+  
+  "complex_transaction": {
+    "description": "Complete transaction with all related data nested (for API response)",
+    "example": {
+      "transaction_id": "76662021700",
+      "amount": 2000.00,
+      "transaction_date": "2024-05-10T16:30:51",
+      "status": "Completed",
+      "type": {
+        "type_id": 2,
+        "type_name": "Received"
+      },
+      "sender": {
+        "user_id": 1,
+        "name": "Jane Smith",
+        "phone": "250791666666",
+        "balance": 2000.00
+      },
+      "receiver": {
+        "user_id": 3,
+        "name": "Linda Green",
+        "phone": "250788110381",
+        "balance": 2500.00
+      },
+      "logs": [
+        {
+          "log_id": 1,
+          "event_description": "Transaction processed successfully",
+          "timestamp": "2024-05-10T16:30:52"
+        },
+        {
+          "log_id": 8,
+          "event_description": "SMS notification sent to receiver",
+          "timestamp": "2024-05-10T16:30:53"
+        }
+      ]
+    },
+    "notes": "This shows how a transaction would be returned from an API with all related data nested instead of using foreign keys"
+  },
+  
+  "user_with_promotions": {
+    "description": "User entity with nested promotions (many-to-many relationship)",
+    "example": {
+      "user_id": 3,
+      "name": "Linda Green",
+      "phone": "250788110381",
+      "balance": 2500.00,
+      "promotions": [
+        {
+          "promo_id": 1,
+          "promo_name": "BivaMoMotima",
+          "discount_rate": 10.00,
+          "join_date": "2024-05-10T10:00:00",
+          "status": "Active",
+          "redeemed": false
+        }
+      ]
+    },
+    "notes": "Shows how many-to-many relationship (user_promos junction table) is represented as nested array in JSON"
+  },
+  
+  "transaction_list": {
+    "description": "Array of transactions (typical API response format)",
+    "example": [
+      {
+        "transaction_id": "76662021700",
+        "amount": 2000.00,
+        "transaction_date": "2024-05-10T16:30:51",
+        "status": "Completed",
+        "type_name": "Received",
+        "sender_name": "Jane Smith",
+        "receiver_name": "Linda Green"
+      },
+      {
+        "transaction_id": "73214484437",
+        "amount": 1000.00,
+        "transaction_date": "2024-05-10T16:31:39",
+        "status": "Completed",
+        "type_name": "Payment",
+        "sender_name": "Linda Green",
+        "receiver_name": "Jane Smith"
+      },
+      {
+        "transaction_id": "51732411227",
+        "amount": 600.00,
+        "transaction_date": "2024-05-10T21:32:32",
+        "status": "Completed",
+        "type_name": "Payment",
+        "sender_name": null,
+        "receiver_name": "Samuel Carter"
+      },
+      {
+        "transaction_id": "43668074924",
+        "amount": 25000.00,
+        "transaction_date": "2024-05-14T20:57:36",
+        "status": "Completed",
+        "type_name": "Received",
+        "sender_name": "Samuel Carter",
+        "receiver_name": null
+      }
+    ],
+    "notes": "Flattened representation suitable for table display, includes joined data from related tables"
+  },
+  
+  "sql_to_json_mapping": {
+    "description": "How SQL relational data maps to JSON structures",
+    "one_to_many": {
+      "sql": "Foreign key relationship (transactions.type_id -> transaction_types.type_id)",
+      "json_option_1": "Nested object: transaction includes full type object",
+      "json_option_2": "Flattened: transaction includes type_name as string field"
+    },
+    "many_to_many": {
+      "sql": "Junction table (user_promos with user_id and promo_id)",
+      "json": "Nested array: user object includes promotions array"
+    },
+    "one_to_many_logs": {
+      "sql": "system_logs.transaction_id -> transactions.transaction_id",
+      "json": "Nested array: transaction includes logs array"
+    }
+  }
+}
