@@ -52,6 +52,9 @@ The system uses MySQL database (`momo_sms_analytics`) with the following tables:
 2. Load sample data: `mysql -u root -p momo_sms_analytics < database/sample_data.sql`
 3. Run test queries: `mysql -u root -p momo_sms_analytics < database/test_queries.sql`
 
+### Documentation
+For detailed database documentation including sample queries with screenshots and constraint testing, please refer to the Database Design Document PDF located in the `docs/db_design_document` folder. The document contains comprehensive examples of database functionality, unique rules implementation, and query results with visual demonstrations.
+
 ## Planned Project Structure
 
 ```
