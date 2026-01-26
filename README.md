@@ -21,6 +21,9 @@ Flow (high level):
 ## Scrum Board
 https://github.com/users/erin-leyian/projects/1/views/1
 
+## Team Task Sheet
+https://docs.google.com/spreadsheets/d/1QJqkAyxRMrB263eiSfwBkgEmQOp3IDE967a9dt-lmQw/edit?gid=0#gid=0
+
 ## Database Design
 
 ### Database Schema
