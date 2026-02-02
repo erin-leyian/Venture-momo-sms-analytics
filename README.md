@@ -48,9 +48,40 @@ The system uses MySQL database (`momo_sms_analytics`) with the following tables:
 - `database/test_queries.sql`: CRUD operation examples and test queries
 
 ### Setup Instructions
-1. Create database: `mysql -u root -p < database/database_setup.sql`
-2. Load sample data: `mysql -u root -p momo_sms_analytics < database/sample_data.sql`
-3. Run test queries: `mysql -u root -p momo_sms_analytics < database/test_queries.sql`
+
+**Option A — Quick local setup (recommended, SQLite)**
+
+1. No external DB required — the FastAPI app uses SQLite by default.
+2. From the repository root, create and activate a virtual environment (optional but recommended):
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+   pip install -r api/requirements.txt
+   ```
+3. Start the API (this will auto-create the SQLite DB file `momo_auth.db` in the `api/` folder):
+   ```bash
+   cd api
+   python3 main.py
+   # or using uvicorn:
+   # uvicorn main:app --reload --host 0.0.0.0 --port 8000
+   ```
+4. Open API docs at `http://localhost:8000/docs` to explore endpoints.
+
+**Option B — MySQL (use the provided SQL scripts)**
+
+1. The project includes MySQL DDL and sample data under `Venture-momo-sms-analytics/database/`.
+2. Create the database and load sample data (run these from the repo root or provide full paths):
+   ```bash
+   mysql -u root -p < Venture-momo-sms-analytics/database/database_setup.sql
+   mysql -u root -p momo_sms_analytics < Venture-momo-sms-analytics/database/sample_data.sql
+   ```
+3. Update `api/config/database.py` to use your MySQL connection, for example:
+   ```py
+   DATABASE_URL = "mysql+pymysql://user:password@localhost/momo_sms_analytics"
+   ```
+   and install the MySQL driver: `pip install pymysql`.
+4. Start the API as above.
+
 
 ### Documentation
 For detailed database documentation including sample queries with screenshots and constraint testing, please refer to the Database Design Document PDF located in the `docs/db_design_document` folder. The document contains comprehensive examples of database functionality, unique rules implementation, and query results with visual demonstrations.
@@ -62,20 +93,36 @@ The MoMo SMS Analytics API provides RESTful endpoints to manage and query mobile
 
 ### Quick Start
 
-1. **Start the API Server:**
-   ```bash
-   python3 api/server.py
-   ```
-   The server will start on `http://localhost:8000`
+1. **Start the API Server (two options):**
 
-2. **Test the API:**
-   ```bash
-   # Run automated tests
-   ./tests/api_tests.sh
-   
-   # Or test manually with curl
-   curl -u admin:admin123 http://localhost:8000/transactions
-   ```
+   - **Option A — FastAPI (recommended, uses SQLite by default)**
+     ```bash
+     # Optional: create and activate a virtualenv
+     python3 -m venv .venv
+     source .venv/bin/activate
+     pip install -r api/requirements.txt
+
+     # From the api/ folder, start the server (auto-creates SQLite DB 'momo_auth.db')
+     cd api
+     python3 main.py
+     # or using uvicorn:
+     # uvicorn main:app --reload --host 0.0.0.0 --port 8000
+     ```
+     API docs: `http://localhost:8000/docs`
+
+   - **Option B — Simple JSON file server (quick demo)**
+     ```bash
+     python3 api/server.py
+     ```
+     This server serves transactions from `api/dsa/momo_transactions.json` and listens on `http://localhost:8000`.
+
+2. **Testing the API**
+
+   - There is no shipped automated API test script in this repository. You can test manually with curl:
+     ```bash
+     curl -u admin:admin123 http://localhost:8000/transactions
+     ```
+   - For FastAPI, add pytest-based tests and run them with `pytest` (recommended for automated testing).
 
 ### Authentication
 
@@ -140,4 +187,4 @@ python3 api/server.py
 ├── api/
 ├── scripts/
 └── tests/
-```
+
