@@ -1,0 +1,120 @@
+# MoMo SMS Analytics API - curl Command Examples
+# Copy and paste these commands to test the API manually
+
+# Make sure the server is running first:
+# python3 api/server.py
+
+# ============================================
+# AUTHENTICATION TESTS
+# ============================================
+
+# Test 1: Valid Authentication
+curl -u admin:admin123 http://localhost:8000/transactions
+
+# Test 2: Invalid Authentication (should return 401)
+curl -u wrong:wrong http://localhost:8000/transactions
+
+# Test 3: No Authentication (should return 401)
+curl http://localhost:8000/transactions
+
+# ============================================
+# GET REQUESTS
+# ============================================
+
+# Get all transactions
+curl -u admin:admin123 http://localhost:8000/transactions
+
+# Get specific transaction (replace ID with actual transaction ID)
+curl -u admin:admin123 http://localhost:8000/transactions/76662021700
+
+# Get non-existent transaction (should return 404)
+curl -u admin:admin123 http://localhost:8000/transactions/NONEXISTENT123
+
+# ============================================
+# POST REQUEST - Create Transaction
+# ============================================
+
+curl -X POST -u admin:admin123 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "parsed_transaction": {
+      "transaction_id": "TEST123456",
+      "amount": "5000",
+      "transaction_type": "payment",
+      "sender": "John Doe",
+      "recipient": "Jane Smith",
+      "new_balance": "10000",
+      "fee": "0",
+      "transaction_date": "2024-05-20 10:00:00"
+    },
+    "raw_body": "Test transaction created via API"
+  }' \
+  http://localhost:8000/transactions
+
+# ============================================
+# PUT REQUEST - Update Transaction
+# ============================================
+
+# Update transaction (replace ID with actual transaction ID)
+curl -X PUT -u admin:admin123 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "parsed_transaction": {
+      "amount": "6000",
+      "new_balance": "11000"
+    }
+  }' \
+  http://localhost:8000/transactions/TEST123456
+
+# ============================================
+# DELETE REQUEST - Delete Transaction
+# ============================================
+
+# Delete transaction (replace ID with actual transaction ID)
+curl -X DELETE -u admin:admin123 http://localhost:8000/transactions/TEST123456
+
+# ============================================
+# ERROR TESTING
+# ============================================
+
+# Test 409 Conflict - Try to create duplicate transaction
+curl -X POST -u admin:admin123 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "parsed_transaction": {
+      "transaction_id": "EXISTING_ID",
+      "amount": "1000"
+    }
+  }' \
+  http://localhost:8000/transactions
+
+# Test 400 Bad Request - Missing transaction_id
+curl -X POST -u admin:admin123 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "parsed_transaction": {
+      "amount": "1000"
+    }
+  }' \
+  http://localhost:8000/transactions
+
+# ============================================
+# PRETTY PRINT JSON OUTPUT
+# ============================================
+
+# Add | python3 -m json.tool to any command for formatted output:
+curl -u admin:admin123 http://localhost:8000/transactions | python3 -m json.tool
+
+# ============================================
+# SAVE RESPONSE TO FILE
+# ============================================
+
+# Save response to file:
+curl -u admin:admin123 http://localhost:8000/transactions > response.json
+
+# ============================================
+# VERBOSE OUTPUT (for debugging)
+# ============================================
+
+# See full HTTP headers and response:
+curl -v -u admin:admin123 http://localhost:8000/transactions

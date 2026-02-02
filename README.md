@@ -55,6 +55,67 @@ The system uses MySQL database (`momo_sms_analytics`) with the following tables:
 ### Documentation
 For detailed database documentation including sample queries with screenshots and constraint testing, please refer to the Database Design Document PDF located in the `docs/db_design_document` folder. The document contains comprehensive examples of database functionality, unique rules implementation, and query results with visual demonstrations.
 
+## REST API
+
+### Overview
+The MoMo SMS Analytics API provides RESTful endpoints to manage and query mobile money transaction data. The API uses Basic Authentication and supports full CRUD operations.
+
+### Quick Start
+
+1. **Start the API Server:**
+   ```bash
+   python3 api/server.py
+   ```
+   The server will start on `http://localhost:8000`
+
+2. **Test the API:**
+   ```bash
+   # Run automated tests
+   ./tests/api_tests.sh
+   
+   # Or test manually with curl
+   curl -u admin:admin123 http://localhost:8000/transactions
+   ```
+
+### Authentication
+
+The API uses Basic Authentication. Credentials:
+- **Username:** `admin` / **Password:** `admin123`
+- **Username:** `user` / **Password:** `user123`
+
+**Example:**
+```bash
+curl -u admin:admin123 http://localhost:8000/transactions
+```
+
+### API Endpoints
+
+- `GET /transactions` - Get all transactions
+- `GET /transactions/{id}` - Get a specific transaction
+- `POST /transactions` - Create a new transaction
+- `PUT /transactions/{id}` - Update a transaction
+- `DELETE /transactions/{id}` - Delete a transaction
+
+### Documentation
+
+For complete API documentation including request/response examples, error codes, and security considerations, see [`docs/api_docs.md`](docs/api_docs.md).
+
+### Testing
+
+Automated test scripts are available in `tests/api_tests.sh`. The script tests:
+- Authentication (success and failure)
+- All CRUD operations
+- Error handling (404, 409, etc.)
+
+To run tests:
+```bash
+# Make sure server is running first
+python3 api/server.py
+
+# In another terminal, run tests
+./tests/api_tests.sh
+```
+
 ## Planned Project Structure
 
 ```

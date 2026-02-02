@@ -1,0 +1,482 @@
+# MoMo SMS Analytics - REST API Report
+
+**Team Name:** Venture Lab (Team 19) 
+**Assignment:** Building and Securing a REST API  
+**Date:** Feb 2, 2026
+
+---
+
+## 1. Introduction to API Security
+
+### 1.1 Overview
+This section introduces the importance of API security and the authentication mechanism implemented in the MoMo SMS Analytics REST API.
+
+### 1.2 Why API Security Matters
+APIs expose data and functionality to clients, making security critical to:
+- **Protect sensitive data:** Transaction records contain financial information
+- **Prevent unauthorized access:** Only authenticated users should access the API
+- **Maintain data integrity:** Prevent malicious modifications or deletions
+- **Comply with regulations:** Financial data requires proper access controls
+
+### 1.3 Authentication Implementation
+The API implements **Basic Authentication** as a simple security mechanism:
+
+- Credentials are sent in the `Authorization` header
+- Format: `Basic base64(username:password)`
+- Server validates credentials before processing requests
+- Returns `401 Unauthorized` for invalid credentials
+
+**Example:**
+```
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+```
+
+### 1.4 Security Considerations
+While Basic Authentication provides a foundation for security, it has limitations that must be understood and addressed in production environments (see Section 4 for detailed analysis).
+
+---
+
+## 2. Documentation of Endpoints
+
+### 2.1 Base URL
+```
+http://localhost:8000
+```
+
+### 2.2 Authentication
+All endpoints require Basic Authentication:
+- **Username:** `admin` / **Password:** `admin123`
+- **Username:** `user` / **Password:** `user123`
+
+Include credentials in the `Authorization` header:
+```
+Authorization: Basic YWRtaW46YWRtaW4xMjM=
+```
+
+---
+
+### 2.3 Endpoint: GET /transactions
+
+**Description:** Retrieve all transactions
+
+**Method:** `GET`
+
+**Authentication:** Required
+
+**Request Example:**
+```bash
+curl -u admin:admin123 http://localhost:8000/transactions
+```
+
+**Response Example (200 OK):**
+```json
+{
+  "transactions": [
+    {
+      "id": "76662021700",
+      "parsed_transaction": {
+        "transaction_id": "76662021700",
+        "amount": "2000",
+        "transaction_type": "receive",
+        "sender": "Jane Smith",
+        "transaction_date": "2024-05-10 16:30:51"
+      }
+    }
+  ],
+  "count": 1693
+}
+```
+
+**Error Codes:**
+- `401 Unauthorized` - Invalid or missing credentials
+
+---
+
+### 2.4 Endpoint: GET /transactions/{id}
+
+**Description:** Retrieve a specific transaction by ID
+
+**Method:** `GET`
+
+**Authentication:** Required
+
+**Path Parameters:**
+- `id` (string, required) - Transaction ID
+
+**Request Example:**
+```bash
+curl -u admin:admin123 http://localhost:8000/transactions/76662021700
+```
+
+**Response Example (200 OK):**
+```json
+{
+  "id": "76662021700",
+  "parsed_transaction": {
+    "transaction_id": "76662021700",
+    "amount": "2000",
+    "transaction_type": "receive",
+    "sender": "Jane Smith",
+    "transaction_date": "2024-05-10 16:30:51"
+  }
+}
+```
+
+**Error Codes:**
+- `401 Unauthorized` - Invalid or missing credentials
+- `404 Not Found` - Transaction ID does not exist
+
+---
+
+### 2.5 Endpoint: POST /transactions
+
+**Description:** Create a new transaction
+
+**Method:** `POST`
+
+**Authentication:** Required
+
+**Request Example:**
+```bash
+curl -X POST -u admin:admin123 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "parsed_transaction": {
+      "transaction_id": "NEW123456",
+      "amount": "5000",
+      "transaction_type": "payment",
+      "sender": "John Doe",
+      "recipient": "Jane Smith",
+      "transaction_date": "2024-05-20 10:00:00"
+    },
+    "raw_body": "Your payment of 5,000 RWF..."
+  }' \
+  http://localhost:8000/transactions
+```
+
+**Response Example (201 Created):**
+```json
+{
+  "message": "Created",
+  "data": {
+    "parsed_transaction": {
+      "transaction_id": "NEW123456",
+      "amount": "5000",
+      ...
+    }
+  }
+}
+```
+
+**Error Codes:**
+- `400 Bad Request` - Missing required fields or invalid JSON
+- `401 Unauthorized` - Invalid or missing credentials
+- `409 Conflict` - Transaction ID already exists
+
+---
+
+### 2.6 Endpoint: PUT /transactions/{id}
+
+**Description:** Update an existing transaction
+
+**Method:** `PUT`
+
+**Authentication:** Required
+
+**Path Parameters:**
+- `id` (string, required) - Transaction ID to update
+
+**Request Example:**
+```bash
+curl -X PUT -u admin:admin123 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "parsed_transaction": {
+      "amount": "6000",
+      "new_balance": "11000"
+    }
+  }' \
+  http://localhost:8000/transactions/NEW123456
+```
+
+**Response Example (200 OK):**
+```json
+{
+  "message": "Updated",
+  "data": {
+    "parsed_transaction": {
+      "transaction_id": "NEW123456",
+      "amount": "6000",
+      ...
+    }
+  }
+}
+```
+
+**Error Codes:**
+- `400 Bad Request` - Missing JSON body
+- `401 Unauthorized` - Invalid or missing credentials
+- `404 Not Found` - Transaction ID does not exist
+
+---
+
+### 2.7 Endpoint: DELETE /transactions/{id}
+
+**Description:** Delete a transaction
+
+**Method:** `DELETE`
+
+**Authentication:** Required
+
+**Path Parameters:**
+- `id` (string, required) - Transaction ID to delete
+
+**Request Example:**
+```bash
+curl -X DELETE -u admin:admin123 http://localhost:8000/transactions/NEW123456
+```
+
+**Response Example (200 OK):**
+```json
+{
+  "message": "Deleted NEW123456"
+}
+```
+
+**Error Codes:**
+- `401 Unauthorized` - Invalid or missing credentials
+- `404 Not Found` - Transaction ID does not exist
+
+---
+
+## 3. Results of DSA Comparison
+
+### 3.1 Problem Statement
+When retrieving transactions by ID, we need to choose between two search algorithms:
+- **Linear Search:** Sequential scanning through a list
+- **Dictionary Lookup:** Hash table-based direct access
+
+### 3.2 Implementation
+
+#### Linear Search (O(n) Complexity)
+```python
+def linear_search(tx_list, target_id):
+    for tx in tx_list:
+        if tx['transaction_id'] == target_id:
+            return tx
+    return None
+```
+
+**Characteristics:**
+- Time Complexity: O(n) - checks up to n items
+- Space Complexity: O(1) - no extra storage
+- Best for: Small datasets, one-time searches
+
+#### Dictionary Lookup (O(1) Complexity)
+```python
+def dictionary_lookup(tx_dict, target_id):
+    return tx_dict.get(target_id)
+```
+
+**Characteristics:**
+- Time Complexity: O(1) - constant time access
+- Space Complexity: O(n) - requires hash table storage
+- Best for: Large datasets, frequent lookups
+
+### 3.3 Test Methodology
+- **Dataset Size:** [X] transactions
+- **Test Cases:** [20+] random transaction IDs
+- **Iterations:** 1000 per search method
+- **Measurement:** Average execution time
+
+### 3.4 Performance Results
+
+| Method | Average Time | Time Complexity | Space Complexity |
+|--------|-------------|-----------------|------------------|
+| Linear Search | [X.XX] ms | O(n) | O(1) |
+| Dictionary Lookup | [X.XX] ms | O(1) | O(n) |
+
+**Key Findings:**
+- Dictionary lookup is approximately **[X]** times faster than linear search
+- Performance difference increases with dataset size
+- For [X] transactions, dictionary lookup provides **[X]x** speedup
+
+**Example Results:**
+```
+Test Results (20 transactions, 1000 iterations each):
+- Linear Search Average: [X.XX] ms
+- Dictionary Lookup Average: [X.XX] ms
+- Speedup: [X.XX]x faster
+```
+
+### 3.5 Why Dictionary Lookup is Faster
+
+1. **Direct Access:** Hash tables use the transaction ID as a key, providing O(1) direct access
+2. **No Iteration:** Unlike linear search, dictionary lookup doesn't need to check each item sequentially
+3. **Scalability:** Performance remains constant regardless of dataset size
+
+### 3.6 Alternative Data Structures
+
+**Binary Search Tree (BST):**
+- Time Complexity: O(log n) - faster than linear, slower than dictionary
+- Space Complexity: O(n)
+- **Use Case:** When data needs to be sorted and range queries are needed
+
+**Hash Table with Chaining:**
+- Time Complexity: O(1) average case (same as dictionary)
+- **Advantage:** Handles collisions better for very large datasets
+- **Use Case:** When dealing with millions of records
+
+**Trie (Prefix Tree):**
+- Time Complexity: O(m) where m is key length
+- **Use Case:** When searching by transaction ID prefixes or partial matches
+
+**Recommendation:** For this use case, dictionary lookup (hash table) is optimal because:
+- Transaction IDs are unique identifiers
+- We need fast lookups by exact ID
+- Dataset size makes O(1) access valuable
+
+---
+
+## 4. Reflection on Basic Auth Limitations
+
+### 4.1 What is Basic Authentication?
+Basic Authentication is a simple HTTP authentication scheme where credentials (username:password) are Base64-encoded and sent in the `Authorization` header.
+
+### 4.2 Limitations of Basic Authentication
+
+#### 4.2.1 Credentials in Plain Text
+**Problem:**
+- Base64 encoding is NOT encryption - it's easily decoded
+- Anyone intercepting the request can extract credentials
+- Example: `YWRtaW46YWRtaW4xMjM=` decodes to `admin:admin123`
+
+**Risk:**
+- Credentials can be stolen via network sniffing
+- Man-in-the-middle attacks can capture credentials
+
+**Solution:**
+- Always use HTTPS/TLS to encrypt the entire HTTP request
+- Never use Basic Auth over unencrypted connections
+
+#### 4.2.2 No Token Expiration
+**Problem:**
+- Credentials don't expire once authenticated
+- If credentials are compromised, they remain valid indefinitely
+- No way to revoke access without changing passwords
+
+**Risk:**
+- Stolen credentials can be used indefinitely
+- No automatic security rotation
+
+**Solution:**
+- Implement token-based authentication (JWT) with expiration
+- Use refresh tokens for long-term sessions
+- Implement token revocation mechanisms
+
+#### 4.2.3 No Role-Based Access Control (RBAC)
+**Problem:**
+- All authenticated users have the same permissions
+- Cannot differentiate between admin and regular users
+- Cannot implement fine-grained access control
+
+**Risk:**
+- All users can perform all operations (GET, POST, PUT, DELETE)
+- No way to restrict certain operations to specific roles
+
+**Solution:**
+- Implement role-based access control
+- Assign different permissions to different user roles
+- Use middleware to check permissions before processing requests
+
+#### 4.2.4 Password Storage
+**Problem:**
+- Passwords stored in plain text in server code
+- No password hashing or encryption
+- Passwords visible in source code
+
+**Risk:**
+- Source code leaks expose all credentials
+- No protection against credential theft
+
+**Solution:**
+- Use password hashing (bcrypt, argon2)
+- Store credentials in environment variables or secure vaults
+- Never commit credentials to version control
+
+### 4.3 Stronger Alternatives
+
+#### 4.3.1 JWT (JSON Web Tokens)
+**How it works:**
+- Server issues a token after initial authentication
+- Token contains user information and expiration
+- Client sends token in `Authorization: Bearer <token>` header
+- Server validates token signature and expiration
+
+**Advantages:**
+- Tokens expire automatically
+- Stateless (no server-side session storage)
+- Can include user roles and permissions
+- Can be revoked via blacklist
+
+**Example:**
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+#### 4.3.2 OAuth2
+**How it works:**
+- Third-party authorization server issues tokens
+- Supports multiple grant types (authorization code, client credentials, etc.)
+- Industry standard for API authentication
+
+**Advantages:**
+- Delegated authorization
+- Supports third-party applications
+- More secure than Basic Auth
+- Widely adopted standard
+
+**Use Case:** When building APIs that third-party applications will access
+
+#### 4.3.3 API Keys
+**How it works:**
+- Server generates unique API keys for each client
+- Client sends key in header or query parameter
+- Server validates key against database
+
+**Advantages:**
+- Simple to implement
+- Easy to revoke (remove from database)
+- Can track usage per key
+
+**Limitations:**
+- Keys don't expire automatically
+- Still vulnerable if intercepted (use HTTPS)
+
+### 4.4 Recommendations for Production
+
+1. **Use HTTPS/TLS:** Encrypt all API communications
+2. **Implement JWT:** Token-based authentication with expiration
+3. **Password Hashing:** Use bcrypt or argon2 for stored passwords
+4. **Environment Variables:** Store credentials securely, not in code
+5. **Rate Limiting:** Prevent brute force attacks
+6. **Request Logging:** Monitor for suspicious activity
+7. **CORS Configuration:** Restrict cross-origin requests appropriately
+8. **Input Validation:** Sanitize all user inputs to prevent injection attacks
+
+### 4.5 Conclusion
+Basic Authentication provides a simple foundation for API security but has significant limitations. For production systems, implementing JWT or OAuth2 with proper password hashing, HTTPS encryption, and role-based access control is essential for maintaining security and protecting sensitive data.
+
+---
+
+## References
+
+- API Source Code: `api/server.py`
+- DSA Implementation: `dsa/search_comparison.py`
+- XML Parser: `dsa/parse_xml.py`
+- API Documentation: `docs/api_docs.md`
+- Test Scripts: `tests/api_tests.sh`
+
+---
+
+**End of Report**
